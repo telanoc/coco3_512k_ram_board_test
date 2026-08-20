@@ -244,7 +244,7 @@ void setup()
   // Just a data point for the serial observer
   Serial.print("Time to generate one row of PRNG data: ");
   Serial.print(elapsed);
-  Serial.println(" msec");
+  Serial.println(" usec");
 
   Serial.flush();
   delay(500);
@@ -364,6 +364,9 @@ uint32_t loop_count = 0;
 //---------------------------------------------------------------
 void loop()
 {
+  uint8_t  sreg;
+  uint32_t elapsed;
+  uint32_t timed = 0;
   uint32_t saveseed;
   uint16_t row = 0, col = 0;
   uint16_t value;
@@ -381,9 +384,16 @@ void loop()
 
   // Fill ram one row at a time.
   for (row = 0; row < row_count; row++) {
+    if (timed == 0) {
+      sreg = start_timer1();
+    }
     fill_prng_data();
     for (col = 0; col < col_size; col++) {
       write_col(row, col, prng_data.u16[col] );
+      if (timed == 0) {
+        elapsed = finish_timer1(sreg);
+        timed++;
+      }
     }
   }
 
@@ -414,9 +424,18 @@ void loop()
       }
     }
   }
+
+
   loop_count++;
   sprintf(buffer, "Success!  Passes: %d", loop_count); 
   Serial.println(buffer);
+
+  // Show our generate/write time if this was the first row. Or we
+  // somehow overflowed a uint32_t loop counter.
+  if (loop_count == 1) {
+    Serial.print("Time to generate and write one row: ");
+    Serial.print(elapsed); Serial.println(" usec");
+  }
 }
 
 

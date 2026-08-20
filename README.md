@@ -1,17 +1,32 @@
 # coco3_512k_ram_board_test
 ![Mega 2560 set up for test](img/mega_2560.jpg)
 
-Since my Color Computer 3 is non-functional at the moment due to a bad GIME chip, this project was created in order to test some 512k RAM boards created using the Kicad project files available at 6809.org.uk.  JLCPCB didn't have the RAM chip and single-flipflop chip, but Mouser Electronics did, so I populated those two myself.
+My Color Computer 3 is non-functional at the moment due to a bad GIME chip.
+That means that I didn't have a good way to test the five 512k RAM boards
+(thanks, JLCPCB) that I built using the Kicad project at
+www.6809.org.uk/dragon/ (see the "CoCo 3 512K SRAM" header).
 
-Initial testing was done on a clone Mega 2560 board.  The second test was with a Mega 2560 Pro Embed from Robotdyn (and some clones)
+Initial testing was done on a clone Mega 2560 board.  The second test was
+with a Mega 2560 Pro Embed from Robotdyn (and some clones).
 
 ![Mega2560 Pro Embed set up for test](img/mega_pro.jpg)
 
-This particular RAM board uses a 16 bit x 256k static RAM chip which matches the Color Computer's memory expansion bus.  It was designed for two banks of eight 41256 RAM chips.  See the 6809.org.uk/dragon project information for particulars.
+Although this test was designed for a board using static RAM, it should
+either work or be adaptable to a Coco 3 expansion that uses DRAM chips.  The
+memory test generates 1 row (128 32 bit values) using a Marsaglia xorshift32
+PRNG.  The array fill takes about 925 microseconds, and adding a row write
+gets up to about 1.05 milliseconds so there should be no problem with
+refresh timing on a DRAM chip.
 
-The memory test generates 1 row (128 32 bit values) using a Marsaglia xorshift32() PRNG.  The initial seed is 0xdecafbad which is modified at startup by reading all the analog inputs and adding values to it.  See the code.
+The initial seed is 0xdecafbad which is modified at startup by reading all
+the analog inputs and adding the absolute values to it.  It then cycles the
+PRNG a few times.  See the code.  There's no reason for making it random
+other than desire.  There are 16 analog inputs that read some noise, they
+might as well be put to use.
 
-It took approximately 35 hours to completely cycle through a write and verify of 256k words at a time (16384 loops).  You probably need far fewer than that.
+It took approximately 35 hours to completely cycle through the PRNG doing a
+write and verify of 256k words at a time (16384 loops).  You probably need
+far fewer than that to consider a board good.
 
 The connections between the RAM board and the Mega are as follows:
 
@@ -42,6 +57,23 @@ RAM          Mega 2560          RAM            Mega 2560
 22 - D4       A4
 23 - D6       A6
 24 - GND      GND
+```
+
+Sample Output
+
+On the first pass, the time to generate and write one row of data
+is displayed, just for information.
+
+```-------------------------------------
+Coco Static RAM tester
+
+Random start addition is 0x2DD4
+Time to generate one row of PRNG data: 927 usec
+PRNG seed 0x9cbf715b : Writing... Verifying... Success!  Passes: 1
+Time to generate and write one row: 1048 usec
+PRNG seed 0x5a34a2ee : Writing... Verifying... Success!  Passes: 2
+PRNG seed 0x7656b523 : Writing... Verifying... Success!  Passes: 3
+PRNG seed 0xf2578867 : Writing... Verifying... Success!  Passes: 4
 ```
 
 TODO: Add more to this readme.
